@@ -48,11 +48,11 @@ class WeekSixSpec extends FlatSpec with Matchers with ScalaFutures {
   }
 
   "webExample" should "fetch the file" in {
-    webExample().futureValue should be ("This is a test")
+    webExample().futureValue should be ("This is a test\n")
   }
 
   "secondName" should "fetch the file" in {
-    secondName().futureValue should be ("Soggyship down")
+    secondName().futureValue should be ("Soggyship Down")
   }
 
   "nameCharactersInCommon" should "fetch the file" in {
