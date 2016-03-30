@@ -55,7 +55,7 @@ class WeekSixSpec extends FlatSpec with Matchers with ScalaFutures {
     secondName().futureValue should be ("Soggyship down")
   }
 
-  "secondName" should "fetch the file" in {
+  "nameCharactersInCommon" should "fetch the file" in {
     nameCharactersInCommon(
       "http://turing.une.edu.au/~cosc250/lectures/cosc250/second.json",
       "http://turing.une.edu.au/~cosc250/lectures/cosc250/watership.json"
