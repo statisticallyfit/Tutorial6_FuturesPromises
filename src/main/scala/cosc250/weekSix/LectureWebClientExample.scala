@@ -6,8 +6,9 @@ import play.api.libs.ws.WSResponse
 import play.api.libs.ws.ahc.AhcWSClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Future, Promise}
-import scala.util.{Success, Try}
+import scala.concurrent.{Await, Future, Promise}
+import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 
 /**
   *
@@ -57,6 +58,65 @@ object WebServerExample extends App {
 
 }
 
+
+object Exam2018_CheckURLExample extends App {
+
+	implicit val system = ActorSystem("Sys")
+	implicit val materializer = ActorMaterializer() //need these for wsClient arg implicit
+	val wsClient: AhcWSClient = AhcWSClient()
+
+
+	sealed trait Result
+	case class Ok(content: String) extends Result
+	case class RedirectTo(url: String) extends Result
+	case object NotFound extends Result
+
+
+	val ZEN_URL: String = "https://api.github.com/zen"
+	val GLOBAL: Int = 1 // 2 or 3
+
+	def webRequest(urlStr: String): Future[Result] = {
+		val resultStr: Future[String] = wsClient.url(urlStr)
+			.get()
+			.map(_.body)
+
+		resultStr.map(str => GLOBAL match {
+			case 1 => Ok(str)
+			case 2 => RedirectTo(ZEN_URL)
+			case 3 => NotFound
+		})
+	}
+
+	def checkUrl(url: String): Future[Option[String]] = {
+		val request: Future[Result] = webRequest(url)
+		/*var holder: Future[Option[String]] = Future(Some(""))
+
+		request.onComplete {
+			case Success(Ok(c)) => {holder = Future(Some(c))}
+			case Success(NotFound) => {holder = Future(None)}
+			case Success(RedirectTo(newUrl)) => checkUrl(newUrl)
+			case Failure(exception) => {holder = Future(None)}
+		}*/
+
+		def decide(res: Result) = res match {
+
+			case Ok(c) => Future(Some(c))
+			case NotFound => Future(None)
+			case RedirectTo(newUrl) => checkUrl(newUrl) //Await.result(checkUrl(newUrl), 10.seconds)
+		}
+
+		val res: Future[Option[String]] = request.flatMap(result => decide(result))
+		//Thread.sleep(2000) //Wait.hangOn(holder)
+
+		res
+		//return holder
+	}
+
+	for {
+		contents <- checkUrl(ZEN_URL)
+	} println(contents)
+
+}
 
 
 
